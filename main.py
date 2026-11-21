@@ -1,19 +1,48 @@
-#!/usr/bin/env python3
-"""Entrypoint: copy the pre-rendered entry.png to the output directory.
+# entrypoint edisi koran gambar 20 November 2026 (v5)
+# Tugas file ini sengaja dibuat sesederhana mungkin: mengambil gambar
+# koran yang sudah selesai dirender (entry.png, satu folder dengan file
+# ini) lalu menaruh salinannya di folder output yang dipakai penilai.
+# Tidak ada pengolahan gambar di sini — render sudah dilakukan di luar,
+# jadi file ini hanya memindahkan hasil akhirnya ke tempat yang benar.
+# Sengaja hanya memakai modul bawaan Python supaya jalan di image
+# python:3.13-slim tanpa Pillow atau paket tambahan apa pun.
 
-The image is drawn by build_image.py (run locally, needs Pillow) and
-stored in this repo. The grader runs this file as `python3 -P -s
-/bot/main.py` in the stock python:3.13-slim image — standard library
-only, no Pillow installed — so this entrypoint must NOT import Pillow:
-it copies the image with the standard library alone. Output goes to
-$MAKEFUN_OUTPUT_DIR, default /output (the grader's writable mount).
-"""
-import os
-import shutil
+from os import environ
 from pathlib import Path
+from shutil import copyfile
 
-src = Path(__file__).with_name("entry.png")
-out_dir = Path(os.environ.get("MAKEFUN_OUTPUT_DIR", "/output"))
-out_dir.mkdir(parents=True, exist_ok=True)
-shutil.copyfile(src, out_dir / "entry.png")
-print(f"copied {src} -> {out_dir / 'entry.png'}")
+SOURCE_NAME = "entry.png"
+DEFAULT_DIR = "/output"
+
+
+def locate_source():
+    # Gambar sumber tinggal di direktori yang sama dengan file ini,
+    # sehingga perintah boleh dijalankan dari folder kerja mana saja
+    # tanpa mengubah di mana gambar itu dicari.
+    here = Path(__file__).resolve().parent
+    return here / SOURCE_NAME
+
+
+def resolve_target_dir():
+    # Folder tujuan dibaca dari variabel lingkungan penilai; bila
+    # kosong atau tidak diset, pakai jalur baku /output.
+    raw = environ.get("MAKEFUN_OUTPUT_DIR", DEFAULT_DIR)
+    cleaned = raw.strip() or DEFAULT_DIR
+    return Path(cleaned)
+
+
+def deliver():
+    source = locate_source()
+    if not source.is_file():
+        print(f"missing source image: {source}")
+        return 1
+    target_dir = resolve_target_dir()
+    target_dir.mkdir(parents=True, exist_ok=True)
+    destination = target_dir / SOURCE_NAME
+    copyfile(source, destination)
+    print(f"copied {source.name} -> {destination}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(deliver())
