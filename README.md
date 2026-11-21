@@ -10,13 +10,17 @@ One 1024×1024 image summing up the world's news of Friday 20 November 2026:
 ## Run
 
 ```sh
-python3 build_image.py        # writes entry.png next to the script
-MAKEFUN_OUTPUT_DIR=out python3 main.py   # writes out/entry.png
+python3 build_image.py        # draws entry.png (needs Pillow, local only)
+MAKEFUN_OUTPUT_DIR=out python3 main.py   # copies entry.png to out/
+python3 main.py               # copies entry.png to /output (grader default)
 ```
 
-`main.py` draws the image with Pillow (no network, deterministic — two runs
-write identical bytes). Fonts resolve from the system DejaVu / Liberation
-paths with a built-in fallback.
+`main.py` is standard library only: it copies the pre-rendered `entry.png`
+to `$MAKEFUN_OUTPUT_DIR` (default `/output`). It must stay that way — the
+grader runs it in stock `python:3.13-slim`, which has no Pillow. The image
+itself is drawn by `build_image.py` with Pillow (no network, deterministic
+— two runs write identical bytes). Fonts resolve from the system DejaVu /
+Liberation paths with a built-in fallback.
 
 ## Design (v5)
 
